@@ -33,12 +33,38 @@ left-to-right, classic-calculator style.
 
 ## Install & run
 
+From the AUR (once published):
+
+```sh
+yay -S tical      # or: paru -S tical
+```
+
+From source:
+
 ```sh
 go run .          # run from source
 # or
 go build -o tical # build a binary
 ./tical
 ```
+
+### Build the Arch package locally
+
+```sh
+makepkg -si       # build and install with pacman
+```
+
+### Releasing (maintainer notes)
+
+The PKGBUILD pulls a tagged release tarball from GitHub. To cut `v0.1.0`:
+
+```sh
+git tag v0.1.0 && git push origin v0.1.0   # create the GitHub release/tag
+updpkgsums                                  # fill in the real sha256 (replaces SKIP)
+makepkg --printsrcinfo > .SRCINFO           # refresh .SRCINFO
+```
+
+Then push `PKGBUILD` + `.SRCINFO` to the `tical` AUR repository.
 
 ## Controls
 
