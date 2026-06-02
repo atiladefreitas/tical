@@ -60,16 +60,25 @@ makepkg -si       # build and install with pacman
 
 ### Releasing (maintainer notes)
 
-The PKGBUILD pulls a tagged release tarball from GitHub. To cut a new version,
-bump `pkgver` in `PKGBUILD`, then:
+Publishing to the AUR is automated by
+[`.github/workflows/publish-aur.yml`](.github/workflows/publish-aur.yml).
+To cut a new version:
 
-```sh
-git tag v$pkgver && git push origin v$pkgver   # create the GitHub release/tag
-updpkgsums                                      # refresh the source sha256 (needs pacman-contrib)
-makepkg --printsrcinfo > .SRCINFO               # refresh .SRCINFO
-```
+1. Create a **GitHub Release** tagged `vX.Y.Z`.
+2. The workflow updates `pkgver`, recomputes the source checksum, regenerates
+   `.SRCINFO`, and prepares the AUR push — then **pauses for manual approval**.
+3. Approve the run in the GitHub UI; the package is pushed to the AUR.
 
-Then push the updated `PKGBUILD` + `.SRCINFO` to the `tical` AUR repository.
+The approval gate is a GitHub *Environment* (`aur`) with the maintainer set as a
+required reviewer, so no release reaches the AUR without an explicit approval.
+
+**One-time setup** (repo *Settings*):
+
+- *Settings → Environments → New environment* → name it `aur`, enable
+  **Required reviewers**, and add yourself.
+- Add an SSH **private** key as the environment secret `AUR_SSH_PRIVATE_KEY`
+  (its matching public key must be registered on your AUR account — a dedicated
+  CI key is recommended over your personal one).
 
 ## Controls
 

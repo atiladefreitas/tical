@@ -1,0 +1,61 @@
+name: Publish to AUR
+
+# Runs when you publish a GitHub Release (which is tied to a vX.Y.Z tag).
+# The job targets the "aur" environment, which is configured with you as a
+# required reviewer — so the actual push to the AUR pauses until you approve it
+# in the GitHub UI. Nobody can publish without that manual approval.
+on:
+  release:
+    types: [published]
+  # Manual fallback (e.g. to re-publish a tag). Still gated by the environment.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish, e.g. v0.1.1"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-aur
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish tical to the AUR
+    runs-on: ubuntu-latest
+    environment: aur # <-- required-reviewer gate; the run waits for your approval
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Resolve version from tag
+        id: ver
+        run: |
+          tag="${{ github.event.release.tag_name || github.event.inputs.tag }}"
+          if [ -z "$tag" ]; then
+            echo "::error::No tag could be resolved from the event." >&2
+            exit 1
+          fi
+          version="${tag#v}"
+          echo "tag=$tag"         >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Publishing tical $version (tag $tag)"
+
+      - name: Set pkgver in PKGBUILD
+        run: |
+          sed -i "s/^pkgver=.*/pkgver=${{ steps.ver.outputs.version }}/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+
+      - name: Publish to the AUR
+        uses: KSXGitHub/github-actions-deploy-aur@v4
+        with:
+          pkgname: tical
+          pkgbuild: ./PKGBUILD
+          commit_username: "Átila de Freitas"
+          commit_email: "atila.jcdefreitas@protonmail.com"
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to ${{ steps.ver.outputs.tag }}"
+          updpkgsums: true # downloads the release tarball and fixes sha256sums
+          ssh_keyscan_types: rsa,ed25519
