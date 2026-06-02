@@ -13,8 +13,7 @@ var (
 	cyan     = lipgloss.Color("#7dcfff")
 	green    = lipgloss.Color("#9ece6a")
 	magenta  = lipgloss.Color("#bb9af7")
-	red      = lipgloss.Color("#f7768e")
-	orange   = lipgloss.Color("#ff9e64")
+	teal     = lipgloss.Color("#73daca")
 	darkText = lipgloss.Color("#1a1b26")
 )
 
@@ -50,7 +49,7 @@ func newStyles() styles {
 			Padding(1, 2).
 			Background(bg).
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(magenta),
+			BorderForeground(blue),
 
 		title: lipgloss.NewStyle().
 			Foreground(magenta).Bold(true),
@@ -81,13 +80,13 @@ func newStyles() styles {
 			Foreground(darkText).Background(blue).Bold(true),
 
 		btnFn: base.
-			Foreground(darkText).Background(red).Bold(true),
+			Foreground(darkText).Background(teal).Bold(true),
 
 		btnEq: base.
 			Foreground(darkText).Background(green).Bold(true),
 
 		btnFocus: base.
-			Foreground(darkText).Background(orange).Bold(true),
+			Foreground(darkText).Background(magenta).Bold(true),
 
 		help: lipgloss.NewStyle().
 			Foreground(comment).
