@@ -8,7 +8,7 @@ url="https://github.com/atiladefreitas/tical"
 license=('MIT')
 makedepends=('go')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('SKIP') # run `updpkgsums` once the v0.1.0 release tarball exists
+sha256sums=('b6232dd54a0157f8bc437a16c1f58c6bda1d1abf018a805a1216725a28989fd2')
 
 prepare() {
 	cd "$pkgname-$pkgver"

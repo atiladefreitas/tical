@@ -7,6 +7,6 @@ pkgbase = tical
 	license = MIT
 	makedepends = go
 	source = tical-0.1.0.tar.gz::https://github.com/atiladefreitas/tical/archive/v0.1.0.tar.gz
-	sha256sums = SKIP
+	sha256sums = b6232dd54a0157f8bc437a16c1f58c6bda1d1abf018a805a1216725a28989fd2
 
 pkgname = tical
