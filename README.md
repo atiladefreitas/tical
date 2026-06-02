@@ -7,22 +7,23 @@ built on [Bubble Tea](https://github.com/charmbracelet/bubbletea),
 [Lip Gloss](https://github.com/charmbracelet/lipgloss).
 
 Operate it entirely with the **mouse** or the **keyboard** — hover and click the
-keys, or type the numbers and operators directly.
+keys, or type the numbers and operators directly. The calculator centres itself
+in the terminal and fills the whole screen.
 
 ```
-╭────────────────────────────────────╮
-│    Tical  · terminal calculator    │
-│  ╭──────────────────────────────╮  │
-│  │                        42 ×  │  │
-│  │                           3  │  │
-│  ╰──────────────────────────────╯  │
-│     C       ⌫       %       ÷      │
-│     7       8       9       ×      │
-│     4       5       6       −      │
-│     1       2       3       +      │
-│     ±       0       .       =      │
-│  ? help • q quit                   │
-╰────────────────────────────────────╯
+╭────────────────────────────────────────────╮
+│    Tical  · terminal calculator            │
+│  ╭──────────────────────────────────────╮  │
+│  │                                      │  │
+│  │                                   0  │  │
+│  ╰──────────────────────────────────────╯  │
+│     C         ⌫         %         ÷        │
+│     7         8         9         ×        │
+│     4         5         6         −        │
+│     1         2         3         +        │
+│     ±         0         .         =        │
+│  ? help • q quit                           │
+╰────────────────────────────────────────────╯
 ```
 
 Keys are color-coded in the Tokyo Night palette: **teal** functions
@@ -87,6 +88,7 @@ required reviewer, so no release reaches the AUR without an explicit approval.
 | Enter digits      | `0`–`9`, `.`                      | click a key        |
 | Operators         | `+` `-` `*` `/` `%`               | click a key        |
 | Evaluate          | `Enter` or `=`                    | click `=`          |
+| Copy result       | `y`                               | —                  |
 | Move focus        | arrow keys / `h` `j` `k` `l`      | hover              |
 | Press focused key | `Space`                           | click              |
 | Delete last digit | `Backspace`                       | click `⌫`          |

@@ -3,6 +3,9 @@
 package ui
 
 import (
+	"time"
+
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -14,9 +17,10 @@ import (
 const (
 	cols     = 4
 	rows     = 5
-	cellW    = btnW + 1 // button width plus its right margin
-	gridLeft = 3        // outer border (1) + left padding (2)
-	gridTop  = 2        // outer border (1) + top padding (1)
+	cellW    = btnW + gapX // horizontal pitch: key width + gap
+	rowPitch = btnH + gapY // vertical pitch: key height + gap
+	gridLeft = 3           // outer border (1) + left padding (2)
+	gridTop  = 2           // outer border (1) + top padding (1)
 )
 
 type btnKind int
@@ -84,7 +88,7 @@ var grid = [rows][cols]button{
 
 type keymap struct {
 	Up, Down, Left, Right key.Binding
-	Equals, Press         key.Binding
+	Equals, Press, Copy   key.Binding
 	Quit, Help            key.Binding
 }
 
@@ -96,6 +100,7 @@ func defaultKeys() keymap {
 		Right:  key.NewBinding(key.WithKeys("right", "l")),
 		Equals: key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "equals")),
 		Press:  key.NewBinding(key.WithKeys(" "), key.WithHelp("space", "press")),
+		Copy:   key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy result")),
 		Quit:   key.NewBinding(key.WithKeys("q", "ctrl+c", "esc"), key.WithHelp("q", "quit")),
 		Help:   key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "help")),
 	}
@@ -110,18 +115,25 @@ func (k keymap) ShortHelp() []key.Binding {
 func (k keymap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Left, k.Right},
-		{k.Equals, k.Press},
+		{k.Equals, k.Press, k.Copy},
 		{k.Help, k.Quit},
 	}
 }
 
+// statusClearMsg wipes the transient status line (e.g. "copied ✓") after a beat.
+type statusClearMsg struct{}
+
 // Model is the Bubble Tea model for Tical.
 type Model struct {
-	c        *calc.Calculator
-	st       styles
-	keys     keymap
-	help     help.Model
-	row, col int // focused cell
+	c              *calc.Calculator
+	st             styles
+	keys           keymap
+	help           help.Model
+	row, col       int    // focused cell
+	winW, winH     int    // terminal size, so the panel can be centred
+	panelW, panelH int    // rendered panel size, for mouse offset maths
+	status         string // transient feedback (copy result), "" when idle
+	statusErr      bool   // colours the status line red on failure
 }
 
 // New returns an initialised Tical model.
@@ -130,13 +142,18 @@ func New() Model {
 	h.Styles.ShortKey = lipgloss.NewStyle().Foreground(blue)
 	h.Styles.ShortDesc = lipgloss.NewStyle().Foreground(comment)
 	h.Styles.ShortSeparator = lipgloss.NewStyle().Foreground(comment)
-	return Model{
+	m := Model{
 		c:    calc.New(),
 		st:   newStyles(),
 		keys: defaultKeys(),
 		help: h,
 		row:  4, col: 3, // start focused on "="
 	}
+	// The panel is a fixed size, so measure it once for mouse hit-testing.
+	panel := m.renderPanel()
+	m.panelW = lipgloss.Width(panel)
+	m.panelH = lipgloss.Height(panel)
+	return m
 }
 
 // Init implements tea.Model.
@@ -149,14 +166,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleKey(msg)
 	case tea.MouseMsg:
 		return m.handleMouse(msg)
+	case tea.WindowSizeMsg:
+		m.winW, m.winH = msg.Width, msg.Height
+		return m, nil
+	case statusClearMsg:
+		m.status, m.statusErr = "", false
+		return m, nil
 	}
 	return m, nil
 }
 
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Any keypress clears stale status; the copy handler sets a fresh one.
+	m.status, m.statusErr = "", false
 	switch {
 	case key.Matches(msg, m.keys.Quit):
 		return m, tea.Quit
+	case key.Matches(msg, m.keys.Copy):
+		return m.copyResult()
 	case key.Matches(msg, m.keys.Help):
 		m.help.ShowAll = !m.help.ShowAll
 		return m, nil
@@ -206,7 +233,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
-	r, c, ok := cellAt(msg.X, msg.Y)
+	r, c, ok := m.cellAt(msg.X, msg.Y)
 	if !ok {
 		return m, nil
 	}
@@ -251,21 +278,62 @@ func (m *Model) focusData(data byte) {
 }
 
 // cellAt converts terminal coordinates to a grid cell, if one is under them.
-func cellAt(x, y int) (row, col int, ok bool) {
-	gy := gridTop + headerHeight()
-	if y < gy || y >= gy+rows {
+// It accounts for the panel being centred in the terminal and for the gaps
+// between keys (clicks landing in a gap return ok == false).
+func (m Model) cellAt(x, y int) (row, col int, ok bool) {
+	offX, offY := m.offsets()
+	gx := offX + gridLeft
+	gy := offY + gridTop + headerHeight()
+
+	relY := y - gy
+	if relY < 0 || relY%rowPitch >= btnH { // above the grid or on a row gap
 		return 0, 0, false
 	}
-	row = y - gy
-	rel := x - gridLeft
-	if rel < 0 {
+	row = relY / rowPitch
+	if row >= rows {
 		return 0, 0, false
 	}
-	col = rel / cellW
-	if col >= cols || rel%cellW >= btnW { // landed on the inter-key margin
+
+	relX := x - gx
+	if relX < 0 || relX%cellW >= btnW { // left of the grid or on a column gap
+		return 0, 0, false
+	}
+	col = relX / cellW
+	if col >= cols {
 		return 0, 0, false
 	}
 	return row, col, true
+}
+
+// offsets returns the top-left corner where the centred panel is drawn.
+func (m Model) offsets() (x, y int) {
+	if m.winW > m.panelW {
+		x = (m.winW - m.panelW) / 2
+	}
+	if m.winH > m.panelH {
+		y = (m.winH - m.panelH) / 2
+	}
+	return x, y
+}
+
+// copyResult copies the current display value to the system clipboard.
+func (m Model) copyResult() (tea.Model, tea.Cmd) {
+	val := m.c.Display()
+	if val == "Error" {
+		m.status, m.statusErr = "nothing to copy", true
+		return m, clearStatusCmd()
+	}
+	if err := clipboard.WriteAll(val); err != nil {
+		m.status, m.statusErr = "clipboard unavailable", true
+	} else {
+		m.status, m.statusErr = "copied "+val+" ✓", false
+	}
+	return m, clearStatusCmd()
+}
+
+// clearStatusCmd hides the status line after a short delay.
+func clearStatusCmd() tea.Cmd {
+	return tea.Tick(2*time.Second, func(time.Time) tea.Msg { return statusClearMsg{} })
 }
 
 // Init/headerHeight: the header (title + screen) sits above the grid; its line

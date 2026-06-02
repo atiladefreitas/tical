@@ -14,13 +14,18 @@ var (
 	green    = lipgloss.Color("#9ece6a")
 	magenta  = lipgloss.Color("#bb9af7")
 	teal     = lipgloss.Color("#73daca")
+	red      = lipgloss.Color("#f7768e") // copy-status errors only, never keys
 	darkText = lipgloss.Color("#1a1b26")
 )
 
-// btnW and btnH are the inner dimensions of a single calculator key.
+// Key geometry: btnW/btnH are a single key's inner size; gapX/gapY are the
+// breathing room between keys. The mouse hit-testing in ui.go derives its
+// pitch from these same constants, so spacing stays click-accurate.
 const (
-	btnW = 7
+	btnW = 8
 	btnH = 1
+	gapX = 2
+	gapY = 1
 )
 
 type styles struct {
@@ -42,7 +47,7 @@ func newStyles() styles {
 	base := lipgloss.NewStyle().
 		Width(btnW).Height(btnH).
 		Align(lipgloss.Center, lipgloss.Center).
-		MarginRight(1)
+		MarginRight(gapX)
 
 	return styles{
 		app: lipgloss.NewStyle().

@@ -7,6 +7,10 @@ arch=('x86_64')
 url="https://github.com/atiladefreitas/tical"
 license=('MIT')
 makedepends=('go')
+optdepends=(
+	'wl-clipboard: copy results to the clipboard on Wayland'
+	'xclip: copy results to the clipboard on Xorg'
+)
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
 sha256sums=('b6232dd54a0157f8bc437a16c1f58c6bda1d1abf018a805a1216725a28989fd2')
 
