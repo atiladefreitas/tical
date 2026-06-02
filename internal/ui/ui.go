@@ -84,31 +84,34 @@ var grid = [rows][cols]button{
 
 type keymap struct {
 	Up, Down, Left, Right key.Binding
-	Enter, Quit, Help     key.Binding
+	Equals, Press         key.Binding
+	Quit, Help            key.Binding
 }
 
 func defaultKeys() keymap {
 	return keymap{
-		Up:    key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("↑/↓/←/→", "move")),
-		Down:  key.NewBinding(key.WithKeys("down", "j")),
-		Left:  key.NewBinding(key.WithKeys("left", "h")),
-		Right: key.NewBinding(key.WithKeys("right", "l")),
-		Enter: key.NewBinding(key.WithKeys("enter", " "), key.WithHelp("enter", "press")),
-		Quit:  key.NewBinding(key.WithKeys("q", "ctrl+c", "esc"), key.WithHelp("q", "quit")),
-		Help:  key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "help")),
+		Up:     key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("↑/↓/←/→", "move")),
+		Down:   key.NewBinding(key.WithKeys("down", "j")),
+		Left:   key.NewBinding(key.WithKeys("left", "h")),
+		Right:  key.NewBinding(key.WithKeys("right", "l")),
+		Equals: key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "equals")),
+		Press:  key.NewBinding(key.WithKeys(" "), key.WithHelp("space", "press")),
+		Quit:   key.NewBinding(key.WithKeys("q", "ctrl+c", "esc"), key.WithHelp("q", "quit")),
+		Help:   key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "help")),
 	}
 }
 
-// ShortHelp implements help.KeyMap.
+// ShortHelp implements help.KeyMap: the bottom bar shows only help and quit.
 func (k keymap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Up, k.Enter, k.Help, k.Quit}
+	return []key.Binding{k.Help, k.Quit}
 }
 
 // FullHelp implements help.KeyMap.
 func (k keymap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Left, k.Right},
-		{k.Enter, k.Help, k.Quit},
+		{k.Equals, k.Press},
+		{k.Help, k.Quit},
 	}
 }
 
@@ -169,7 +172,10 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, m.keys.Right):
 		m.col = (m.col + 1) % cols
 		return m, nil
-	case key.Matches(msg, m.keys.Enter):
+	case key.Matches(msg, m.keys.Equals):
+		m.c.Equals()
+		return m, nil
+	case key.Matches(msg, m.keys.Press):
 		m.press(grid[m.row][m.col])
 		return m, nil
 	}

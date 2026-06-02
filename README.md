@@ -46,8 +46,9 @@ go build -o tical # build a binary
 | ----------------- | --------------------------------- | ------------------ |
 | Enter digits      | `0`–`9`, `.`                      | click a key        |
 | Operators         | `+` `-` `*` `/` `%`               | click a key        |
-| Evaluate          | `=` or `Enter`                    | click `=`          |
+| Evaluate          | `Enter` or `=`                    | click `=`          |
 | Move focus        | arrow keys / `h` `j` `k` `l`      | hover              |
+| Press focused key | `Space`                           | click              |
 | Delete last digit | `Backspace`                       | click `⌫`          |
 | Clear             | `c` / `C`                         | click `C`          |
 | Toggle help       | `?`                               | —                  |
