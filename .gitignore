@@ -1,2 +1,12 @@
+# compiled binary
 /tical
 *.out
+
+# makepkg build artifacts (created when running makepkg in-tree)
+/pkg/
+/src/
+*.pkg.tar.zst
+*.tar.gz
+
+# local AUR package clone (separate repo, pushed to the AUR remote)
+/aur-tical/
