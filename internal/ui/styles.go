@@ -10,9 +10,10 @@ var (
 	fg       = lipgloss.Color("#c0caf5")
 	comment  = lipgloss.Color("#565f89")
 	blue     = lipgloss.Color("#7aa2f7")
-	cyan     = lipgloss.Color("#7dcfff")
+	dimBlue  = lipgloss.Color("#3d59a1") // utility keys (C, ⌫, ±): blue family, dialed back
 	green    = lipgloss.Color("#9ece6a")
 	magenta  = lipgloss.Color("#bb9af7")
+	keyBg    = lipgloss.Color("#2a2f45") // raised surface so digit keys read as keys
 	red      = lipgloss.Color("#f7768e") // copy-status errors only, never keys
 	darkText = lipgloss.Color("#1a1b26")
 )
@@ -22,7 +23,7 @@ var (
 // pitch from these same constants, so spacing stays click-accurate.
 const (
 	btnW = 9
-	btnH = 3
+	btnH = 1
 	gapX = 1
 	gapY = 0
 )
@@ -77,20 +78,23 @@ func newStyles() styles {
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(bgHL),
 
+		// Digits sit on a raised surface so they read as keys against the
+		// panel without competing with the coloured action keys.
 		btn: base.
-			Foreground(fg).Background(bgHL),
+			Foreground(fg).Background(keyBg),
+
+		// Action keys stay in one colour family — utility dialed back, the
+		// operators bright — so the eye groups them but still ranks them.
+		btnFn: base.
+			Foreground(fg).Background(dimBlue),
 
 		btnOp: base.
-			Foreground(darkText).Background(blue).Bold(true),
-
-		// Functions share the operator accent so the grid reads as two groups
-		// (blue actions, green equals) rather than four competing colors.
-		btnFn: base.
 			Foreground(darkText).Background(blue).Bold(true),
 
 		btnEq: base.
 			Foreground(darkText).Background(green).Bold(true),
 
+		// Focus is the single brightest key on the grid.
 		btnFocus: base.
 			Foreground(darkText).Background(magenta).Bold(true),
 
