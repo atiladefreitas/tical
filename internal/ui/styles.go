@@ -13,7 +13,6 @@ var (
 	cyan     = lipgloss.Color("#7dcfff")
 	green    = lipgloss.Color("#9ece6a")
 	magenta  = lipgloss.Color("#bb9af7")
-	teal     = lipgloss.Color("#73daca")
 	red      = lipgloss.Color("#f7768e") // copy-status errors only, never keys
 	darkText = lipgloss.Color("#1a1b26")
 )
@@ -22,10 +21,10 @@ var (
 // breathing room between keys. The mouse hit-testing in ui.go derives its
 // pitch from these same constants, so spacing stays click-accurate.
 const (
-	btnW = 8
-	btnH = 1
-	gapX = 2
-	gapY = 1
+	btnW = 9
+	btnH = 3
+	gapX = 1
+	gapY = 0
 )
 
 type styles struct {
@@ -84,8 +83,10 @@ func newStyles() styles {
 		btnOp: base.
 			Foreground(darkText).Background(blue).Bold(true),
 
+		// Functions share the operator accent so the grid reads as two groups
+		// (blue actions, green equals) rather than four competing colors.
 		btnFn: base.
-			Foreground(darkText).Background(teal).Bold(true),
+			Foreground(darkText).Background(blue).Bold(true),
 
 		btnEq: base.
 			Foreground(darkText).Background(green).Bold(true),

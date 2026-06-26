@@ -18,7 +18,7 @@ func TestCellGeometry(t *testing.T) {
 			label := grid[r][c].label
 			// Center of the button: column/row pitch offset + half the size.
 			x := gridLeft + c*cellW + btnW/2
-			y := gridTop + headerHeight() + r*rowPitch
+			y := gridTop + headerHeight() + r*rowPitch + (btnH-1)/2
 
 			if y >= len(lines) {
 				t.Fatalf("cell (%d,%d): y=%d beyond %d rendered lines", r, c, y, len(lines))
